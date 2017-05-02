@@ -22,4 +22,9 @@ public class YamlService {
         InputStream input = new FileInputStream(new File(fileName));
         return yaml.load(input);
     }
+
+    public static Object load(Constructor constructor, FileInputStream fileInputStream) throws FileNotFoundException {
+        Yaml yaml = new Yaml(constructor);
+        return yaml.load(fileInputStream);
+    }
 }

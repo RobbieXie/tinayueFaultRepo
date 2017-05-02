@@ -6,9 +6,11 @@ package com.tiandi.controller;
  */
 
 import com.tiandi.mongo.*;
+import com.tiandi.mongo.dsl.TestCaseParams;
 import com.tiandi.mongo.dsl.YamlDSL;
 import com.tiandi.mongo.faulttree.FaultTreeNode;
 import com.tiandi.mongo.testcase.TestCase;
+import com.tiandi.service.FaultInjectionInfoService;
 import com.tiandi.service.FaultTreeService;
 import com.tiandi.service.YamlService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,28 +38,8 @@ public class testController {
     @Autowired
     private FaultTreeService faultTreeService;
 
-    @RequestMapping(path="/")
-    public String index() {
-        try {
-            TestCase tc = (TestCase) YamlService.load(new Constructor(TestCase.class),"F:/testcase/testcase.yaml");
-            YamlDSL dsl = (YamlDSL) YamlService.load(new Constructor(YamlDSL.class),"F:/testcase/testcase2.yaml");
-            CloudFailure cf = dsl.cloudFailure;
-            List<String> index = cf.index;
-
-            CloudFailure parentCf = failureRepository.findById(index.get(index.size()-1));
-            if(parentCf.children == null) parentCf.children = new ArrayList<String>();
-            parentCf.children.add(cf.id);
-            failureRepository.save(parentCf);
-            failureRepository.save(cf);
-
-//            String index = "CloudFailure";
-//            List<CloudFailure> parentCf = failureRepository.findByIndex(index);
-            System.out.print(123);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return "Greetings from Spring Boot!";
-    }
+    @Autowired
+    private FaultInjectionInfoService faultInjectionInfoService;
 
     @RequestMapping(path="/mongo/savef")
     public String saveFailure() {
@@ -104,11 +88,71 @@ public class testController {
     }
 
     @RequestMapping(path="/mongo/tree")
-    @ResponseBody
-    public FaultTreeNode generatefaultTree() {
-        FaultTreeNode rootNode = faultTreeService.recursiveTree("C-F");
+    public String generatefaultTree() {
+        FaultTreeNode rootNode = faultTreeService.recursiveTree("C-F",true);
         faultTreeService.printTree(rootNode);
-        return rootNode;
+
+        rootNode = faultTreeService.recursiveTree("C-F",false);
+        return faultTreeService.printTree(rootNode);
+    }
+
+    @RequestMapping(path="/dsl")
+    public String operateDSL( MultipartFile file) {
+        //@RequestParam(value = "file", required = true)
+        try {
+            FileInputStream fileInputStream;
+            YamlDSL dsl;
+            if(file != null){
+                fileInputStream = (FileInputStream) file.getInputStream();
+                dsl = (YamlDSL) YamlService.load(new Constructor(YamlDSL.class),fileInputStream);
+            }else {
+//                dsl = (YamlDSL) YamlService.load(new Constructor(YamlDSL.class),"F:/testcase/testcase2.yaml");
+                return "上传文件为空！";
+            }
+            String faultTreeStructure = faultTreeService.ShowFaultTreeStructure();
+            String operation = dsl.operation;
+            if(operation.equals("AddFaultIntoLib")){
+                CloudFailure cf = dsl.cloudFailure;
+                List<String> index = cf.index;
+                String id = cf.id;
+
+                CloudFailure checkCfInDatabase = failureRepository.findById(id);
+                if(checkCfInDatabase!=null) return "ID already Existed!" + "\n" + faultTreeStructure;
+
+                if(index == null) {
+                    List<CloudFailure> cfs = failureRepository.findByIndex(null);
+                    if(cfs.size()>0) return "Index cannot be null! Root node has already existed, id:"+cfs.get(0).id+ "\n" + faultTreeStructure;
+                }
+
+                CloudFailure parentCf = failureRepository.findById(index.get(index.size()-1));
+                if(parentCf == null) return "Index Wrong! Parent ID cannot be found!"+ "\n" + faultTreeStructure;
+                if(parentCf.children == null) parentCf.children = new ArrayList<String>();
+                parentCf.children.add(cf.id);
+                failureRepository.save(parentCf);
+                failureRepository.save(cf);
+                faultTreeStructure = faultTreeService.ShowFaultTreeStructure();
+                return "Add Fault Into Lib Successfully"+ "\n" + faultTreeStructure;
+
+            }else if(operation.equals("GenerateTestCase")){
+                TestCaseParams params = dsl.testCaseParams;
+                CloudFailure cf = failureRepository.findById(params.faultId);
+                if(cf == null || cf.isCategory || cf.cause==null ||cf.faultLocation==null) return "FaultID Wrong or FaultInfo Wrong!";
+                TestCase tc = faultInjectionInfoService.generateTestCase(params.faultId,params.attackerPoint,params.monitorPoint);
+//                else tc = faultInjectionInfoService.generateTestCase(params.faultId);
+                faultInjectionInfoService.createTestCaseFile(tc,params.outputPath+"//" +params.faultId+".yaml");
+                return "Generate TestCase Successfully!   " + params.outputPath+"//" +params.faultId+".yaml";
+
+            }else if(operation.equals("ShowFaultTreeStructure")){
+                return faultTreeStructure;
+
+            }else{
+                return "Error! Operation not Found!";
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "文件格式或内容错误！";
     }
 
 }

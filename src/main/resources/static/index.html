@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<br>
+    <input id="fileinput" type="file" name="fileupload" style="display:none" value="Choose File" onchange="changeAgentContent()"/>
+    <input type="text" value="" disabled id="inputFileAgent" />
+    <input type="button" onclick="document.getElementById('fileinput').click()" value="Browse..." />
+    <button onclick="uploadFile()">Execute</button></br></br>
+    <textarea id="message" rows="20" cols="100" placeholder="返回结果"></textarea>
+
+    <script>
+        function changeAgentContent(){
+            document.getElementById("inputFileAgent").value = document.getElementById("fileinput").files[0].name;
+        }
+        function uploadFile(){
+            var file = document.getElementById("fileinput").files[0];
+
+            var url = '/dsl';
+            var xhr = new XMLHttpRequest();
+            var fd = new FormData();
+            xhr.open("POST", url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    // Every thing ok, file uploaded
+                    console.log(xhr.responseText); // handle response.
+                    document.getElementById("message").value = xhr.responseText;
+                }
+            };
+            fd.append("file", file);
+            xhr.send(fd);
+        }
+
+    </script>
+</body>
+
+</html>

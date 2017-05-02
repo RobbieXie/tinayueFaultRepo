@@ -15,6 +15,7 @@ public class Monitor {
     public String monitorPoint;
     @Property
     public int SLA;
+    public String host = "node1";
 
 //    public Monitor(String monitorType, int monitorTime, int SLA) {
 //        this.monitorType = monitorType;

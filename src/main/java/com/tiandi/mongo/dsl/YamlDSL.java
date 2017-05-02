@@ -11,6 +11,7 @@ public class YamlDSL {
     public String operation;
     public CloudFailure cloudFailure;
     public FaultInjectionInfo faultInjectionInfo;
+    public TestCaseParams testCaseParams;
     YamlDSL(){}
 
 }

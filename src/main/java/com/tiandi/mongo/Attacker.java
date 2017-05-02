@@ -11,6 +11,7 @@ public class Attacker {
     public String faultType;
     @Property
     public String attackerPoint;
+    public String host = "node1";
 
 //    public Attacker(String faultType) {
 //        this.faultType = faultType;

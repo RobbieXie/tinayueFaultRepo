@@ -37,6 +37,15 @@ public class FaultInjectionInfoService {
         return tc;
     }
 
+    public TestCase generateTestCase(String id,String attackerPoint, String monitorPoint) {
+        CloudFailure faultNode = failureRepository.findById(id);
+        FaultInjectionInfo injectionInfo = faultInjectionInfoRepository.findById(faultNode.cause);
+        TestCase tc = new TestCase(faultNode.faultLocation, injectionInfo.attacker,injectionInfo.monitor);
+        if(attackerPoint!=null) tc.scenario.attacker.attackerPoint = attackerPoint;
+        if(monitorPoint!=null) tc.scenario.monitor.monitorPoint = monitorPoint;
+        return tc;
+    }
+
     public void createTestCaseFile(TestCase tc, String filename) throws IOException{
         Representer repr = new Representer();
         repr.setPropertyUtils(new FaultInjectionInfoService.UnsortedPropertyUtils());

@@ -10,6 +10,7 @@ import java.util.List;
 public class FaultTreeNode {
 
     public String id;
+    public boolean isCategory;
     public List<FaultTreeNode> children = new ArrayList<>();
 
     public FaultTreeNode(){}

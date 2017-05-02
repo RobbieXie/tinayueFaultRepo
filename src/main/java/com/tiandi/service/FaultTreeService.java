@@ -19,22 +19,34 @@ public class FaultTreeService {
     @Autowired
     private CloudFailureRepository failureRepository;
 
-    public FaultTreeNode recursiveTree(String id){
+    public String ShowFaultTreeStructure(){
+        List<CloudFailure> cfs = failureRepository.findByIndex(null);
+        CloudFailure cf = cfs.get(0);
+        if(cf==null) return "Empty!";
+        FaultTreeNode rootNode = recursiveTree(cf.id,true);
+        String result = printTree(rootNode);
+        return result;
+    }
+
+    //isAll判定是否返回叶子节点
+    public FaultTreeNode recursiveTree(String id, boolean isAllNeeded){
         CloudFailure cf = failureRepository.findById(id);
-        if(!cf.isCategory) return null;
+        if(!cf.isCategory && !isAllNeeded) return null;
         FaultTreeNode node = new FaultTreeNode();
         node.id = cf.id;
+        node.isCategory = cf.isCategory;
         if(cf.children == null) return node;
         else{
             for(int i=0;i<cf.children.size();i++){
-                FaultTreeNode childNode = recursiveTree(cf.children.get(i));
+                FaultTreeNode childNode = recursiveTree(cf.children.get(i),isAllNeeded);
                 if(childNode != null) node.children.add(childNode);
             }
         }
         return node;
     }
 
-    public void printTree(FaultTreeNode tree) {
+    public String printTree(FaultTreeNode tree) {
+        String resultTree = "";
         List<FaultTreeNode> firstStack = new ArrayList<>();
         firstStack.add(tree);
 
@@ -55,13 +67,20 @@ public class FaultTreeService {
                 for (int i = 0; i < childListStack.size() - 1; i++) {
                     indent += (childListStack.get(i).size() > 0) ? "|  " : "   ";
                 }
-
-                System.out.println(indent + "+- " + tree.id);
+                if(tree.isCategory) {
+                    System.out.println(indent + "+- " + tree.id);
+                    resultTree = resultTree + indent + "+- " + tree.id +"\n";
+                }
+                else{
+                    System.out.println(indent + "+- " + tree.id + " *");
+                    resultTree = resultTree + indent + "+- " + tree.id+ " *" +"\n";
+                }
 
                 if (tree.children.size() > 0) {
                     childListStack.add(new ArrayList<FaultTreeNode>(tree.children));
                 }
             }
         }
+        return resultTree;
     }
 }
