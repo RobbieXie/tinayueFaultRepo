@@ -13,6 +13,8 @@ import com.tiandi.mongo.testcase.TestCase;
 import com.tiandi.service.FaultInjectionInfoService;
 import com.tiandi.service.FaultTreeService;
 import com.tiandi.service.YamlService;
+import com.tiandi.service.geneticalgorithm.FaultTreeGA;
+import com.tiandi.service.geneticalgorithm.Individual;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,6 +47,18 @@ public class testController {
 
     @Autowired
     private FaultInjectionInfoService faultInjectionInfoService;
+
+    @Autowired
+    private FaultTreeGA faultTreeGA;
+
+
+    @RequestMapping(path="/mongo/ga")
+    public String ga(){
+        Individual i = new Individual();
+        int  fitness = i.getFitness();
+        faultTreeGA.generateFaultCode();
+        return "ga";
+    }
 
     @RequestMapping(path="/mongo/savef")
     public String saveFailure() {
