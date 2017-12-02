@@ -51,11 +51,16 @@ public class testController {
     @Autowired
     private FaultTreeGA faultTreeGA;
 
+    @Autowired
+    private Individual individual;
+
 
     @RequestMapping(path="/mongo/ga")
     public String ga(){
-        Individual i = new Individual();
-        int  fitness = i.getFitness();
+//        Individual i = new Individual();
+//        int  fitness = i.getFitness();
+        individual.generateIndividul();
+        individual.getFitness();
         faultTreeGA.generateFaultCode();
         return "ga";
     }
@@ -436,7 +441,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Process-Crash"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node1-Process-Crash-Neutron-NeutronServer","Node1-Process-Crash-Neutron-L3Agent","Node1-Process-Crash-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node1-Process-Crash-Neutron","Neutron Failure","Category for Neutron Process-Crash of Node1.", true,tags , null, null, index, children));
 
@@ -641,7 +646,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Wrong"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node1-Config-Wrong-Neutron-NeutronServer","Node1-Config-Wrong-Neutron-L3Agent","Node1-Config-Wrong-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node1-Config-Wrong-Neutron","Neutron Failure","Category for Neutron Config-Wrong of Node1.", true,tags , null, null, index, children));
 
@@ -846,7 +851,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Loss"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node1-Config-Loss-Neutron-NeutronServer","Node1-Config-Loss-Neutron-L3Agent","Node1-Config-Loss-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node1-Config-Loss-Neutron","Neutron Failure","Category for Neutron Config-Loss of Node1.", true,tags , null, null, index, children));
 
@@ -1124,7 +1129,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node2-Failure","Node2-Software-Failure","Node2-Process-Crash"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node2-Process-Crash-Neutron-NeutronServer","Node2-Process-Crash-Neutron-L3Agent","Node2-Process-Crash-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node2-Process-Crash-Neutron","Neutron Failure","Category for Neutron Process-Crash of Node2.", true,tags , null, null, index, children));
 
@@ -1329,7 +1334,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node2-Failure","Node2-Software-Failure","Node2-Config-Wrong"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node2-Config-Wrong-Neutron-NeutronServer","Node2-Config-Wrong-Neutron-L3Agent","Node2-Config-Wrong-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node2-Config-Wrong-Neutron","Neutron Failure","Category for Neutron Config-Wrong of Node2.", true,tags , null, null, index, children));
 
@@ -1534,7 +1539,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node2-Failure","Node2-Software-Failure","Node2-Config-Loss"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node2-Config-Loss-Neutron-NeutronServer","Node2-Config-Loss-Neutron-L3Agent","Node2-Config-Loss-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node2-Config-Loss-Neutron","Neutron Failure","Category for Neutron Config-Loss of Node2.", true,tags , null, null, index, children));
 
@@ -1812,7 +1817,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node3-Failure","Node3-Software-Failure","Node3-Process-Crash"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node3-Process-Crash-Neutron-NeutronServer","Node3-Process-Crash-Neutron-L3Agent","Node3-Process-Crash-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node3-Process-Crash-Neutron","Neutron Failure","Category for Neutron Process-Crash of Node3.", true,tags , null, null, index, children));
 
@@ -2017,7 +2022,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node3-Failure","Node3-Software-Failure","Node3-Config-Wrong"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node3-Config-Wrong-Neutron-NeutronServer","Node3-Config-Wrong-Neutron-L3Agent","Node3-Config-Wrong-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node3-Config-Wrong-Neutron","Neutron Failure","Category for Neutron Config-Wrong of Node3.", true,tags , null, null, index, children));
 
@@ -2222,7 +2227,7 @@ public class testController {
         //--2-- neutron
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node3-Failure","Node3-Software-Failure","Node3-Config-Loss"));
-        tags.addAll(Arrays.asList("Neutron"));
+        tags.addAll(Arrays.asList("Neutron","Network"));
         children.addAll(Arrays.asList("Node3-Config-Loss-Neutron-NeutronServer","Node3-Config-Loss-Neutron-L3Agent","Node3-Config-Loss-Neutron-L2Agent"));
         failureRepository.save(new CloudFailure("Node3-Config-Loss-Neutron","Neutron Failure","Category for Neutron Config-Loss of Node3.", true,tags , null, null, index, children));
 

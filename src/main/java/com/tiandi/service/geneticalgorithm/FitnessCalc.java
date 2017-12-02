@@ -14,7 +14,7 @@ import java.util.Map;
  * @author 谢天帝
  * @version v0.1 2017/12/2.
  */
-
+@Service
 public class FitnessCalc {
 
     private List<String> tags = new ArrayList<>();
@@ -29,7 +29,11 @@ public class FitnessCalc {
     @Autowired
     private CloudFailureRepository failureRepository;
 
-    public FitnessCalc(List<String> tags) {
+    public FitnessCalc(){
+
+    }
+
+    public void setTags(List<String> tags) {
         this.tags = tags;
         layerLengthList = faultTreeGA.getLayerLengthList();
 
@@ -41,11 +45,13 @@ public class FitnessCalc {
                 List<String> compareCodes = new ArrayList<>();
                 for(CloudFailure cf : cfs){
                     if(cf.isCategory && cf.getTags().indexOf(tag)!=-1){
-                        compareCodes.add(faultTreeGA.getCategoryLayerCodeMap().get(j).get(cf.getName()));
+                        if(!compareCodes.contains(faultTreeGA.getCategoryLayerCodeMap().get(j).get(cf.getName())))
+                            compareCodes.add(faultTreeGA.getCategoryLayerCodeMap().get(j).get(cf.getName()));
                     }
                 }
                 if(compareCodes.size()>0)
                     compareLayerAndCodeMap.put(j,compareCodes);
+                cfs = failureRepository.findByIndexSize(j+1);
             }
         }
     }

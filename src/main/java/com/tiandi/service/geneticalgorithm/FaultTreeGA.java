@@ -38,6 +38,14 @@ public class FaultTreeGA {
     private CloudFailureRepository failureRepository;
 
     public Map<String,String> generateFaultCode(){
+        layerSize =0 ;
+        totalCodeLength=0;
+        layerLengthList = new ArrayList<>();
+        categoryLayerCodeMap = new LinkedHashMap<>();
+        specialList = new ArrayList<>();
+        maxLeafNodes = 0 ;
+        leafCodeMap = new LinkedHashMap<>();
+
         List<CloudFailure> cfs = failureRepository.findByIndexSize(1);
         // 逐层遍历数据库
         for(int i = 1; cfs!=null&&cfs.size()!=0;i++){

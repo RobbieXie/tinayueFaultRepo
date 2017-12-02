@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 /**
@@ -24,21 +25,26 @@ public class Individual {
     @Autowired
     private FaultTreeGA faultTreeGA;
 
+    @Autowired
+    private FitnessCalc fitnessCalc;
 
     public Individual() {
+
+    }
+
+    public void generateIndividul(){
         Map<String,String> codeMap = faultTreeGA.generateFaultCode();
         for(String name : codeMap.keySet()){
             availableCodeList.add(codeMap.get(name));
         }
-    }
 
-    public void generateIndividul(){
         int random = new Random().nextInt(availableCodeList.size());
         this.gene = this.availableCodeList.get(random);
     }
 
     public int getFitness(){
-        return new FitnessCalc(Arrays.asList("Network")).getFitness(this);
+        fitnessCalc.setTags(Arrays.asList("Network"));
+        return fitnessCalc.getFitness(this);
     }
 
     public String getGene() {
