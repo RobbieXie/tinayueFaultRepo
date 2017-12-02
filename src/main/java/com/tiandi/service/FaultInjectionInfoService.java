@@ -41,8 +41,8 @@ public class FaultInjectionInfoService {
         CloudFailure faultNode = failureRepository.findById(id);
         FaultInjectionInfo injectionInfo = faultInjectionInfoRepository.findById(faultNode.cause);
         TestCase tc = new TestCase(faultNode.faultLocation, injectionInfo.attacker,injectionInfo.monitor);
-        if(attackerPoint!=null) tc.scenario.attacker.attackerPoint = attackerPoint;
-        if(monitorPoint!=null) tc.scenario.monitor.monitorPoint = monitorPoint;
+        if(attackerPoint!=null) tc.scenarios.get(0).options.attackers.get(0).attackerPoint = attackerPoint;
+        if(monitorPoint!=null) tc.scenarios.get(0).options.monitors.get(0).monitorPoint = monitorPoint;
         return tc;
     }
 

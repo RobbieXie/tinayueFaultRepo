@@ -35,6 +35,7 @@ public class FaultTreeService {
         FaultTreeNode node = new FaultTreeNode();
         node.id = cf.id;
         node.isCategory = cf.isCategory;
+        System.out.println(node.id);
         if(cf.children == null) return node;
         else{
             for(int i=0;i<cf.children.size();i++){

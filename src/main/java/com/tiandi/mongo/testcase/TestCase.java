@@ -5,6 +5,8 @@ import com.tiandi.mongo.Monitor;
 import jdk.nashorn.internal.objects.annotations.Property;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 谢天帝
@@ -14,7 +16,7 @@ public class TestCase implements Serializable{
     @Property
     public String schema;
     @Property
-    public Scenarios scenario;
+    public List<Scenario> scenarios = new ArrayList<>();
     @Property
     public Context context;
 
@@ -26,12 +28,12 @@ public class TestCase implements Serializable{
         this.schema = schema;
     }
 
-    public Scenarios getScenarios() {
-        return scenario;
+    public List<Scenario> getScenarios() {
+        return scenarios;
     }
 
-    public void setScenarios(Scenarios scenarios) {
-        this.scenario= scenarios;
+    public void setScenarios(Scenario scenario) {
+        this.scenarios.add(scenario);
     }
 
     public Context getContext() {
@@ -47,7 +49,8 @@ public class TestCase implements Serializable{
 
     public TestCase(String faultLocation, Attacker attacker, Monitor monitor) {
         this.schema = "yardstick:task:0.1";
-        this.scenario = new Scenarios(faultLocation,attacker,monitor);
+        Scenario scenario = new Scenario(faultLocation,attacker,monitor);
+        this.scenarios.add(scenario);
         this.context = new Context();
     }
 
