@@ -14,7 +14,9 @@ import com.tiandi.service.FaultInjectionInfoService;
 import com.tiandi.service.FaultTreeService;
 import com.tiandi.service.YamlService;
 import com.tiandi.service.geneticalgorithm.FaultTreeGA;
+import com.tiandi.service.geneticalgorithm.FitnessCalc;
 import com.tiandi.service.geneticalgorithm.Individual;
+import com.tiandi.service.geneticalgorithm.Population;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,9 +27,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class testController {
@@ -51,18 +51,59 @@ public class testController {
     @Autowired
     private FaultTreeGA faultTreeGA;
 
-    @Autowired
     private Individual individual;
+
+    @Autowired
+    FitnessCalc fitnessCalc;
 
 
     @RequestMapping(path="/mongo/ga")
-    public String ga(){
-//        Individual i = new Individual();
-//        int  fitness = i.getFitness();
-        individual.generateIndividul();
-        individual.getFitness();
+    public String ga(@RequestParam List<String> tags, @RequestParam int outputSize, @RequestParam int generateTimes, @RequestParam int populationSize, @RequestParam Double crossoverRate,@RequestParam Double mutateRate,
+                     @RequestParam Boolean elitsm,@RequestParam int tournamentSize){
+        String result = "";
+        long startTime = System.currentTimeMillis();
         faultTreeGA.generateFaultCode();
-        return "ga";
+        fitnessCalc.setTags(tags);
+
+        Population p = new Population();
+        p.setSize(populationSize);
+        p.setCrossoverRate(crossoverRate);
+        p.setMutateRate(mutateRate);
+        p.setElitsm(elitsm);
+        p.setTournamentSize(tournamentSize);
+
+        p.generatePopulation();
+        for(int i=0;i<generateTimes;i++){
+            p = p.generateNextPopulation();
+        }
+
+        // 将population从大到小排序
+        List<Individual> leafCodeList = p.getIndividuals();
+        Collections.sort(leafCodeList, new Comparator<Individual>() {
+            @Override
+            public int compare(Individual o1, Individual o2) {
+                return o2.getFitness()-o1.getFitness();
+            }
+        });
+
+        // 输出
+        if(outputSize<=0) outputSize=20;
+        Map<String,String> codeMap = faultTreeGA.getLeafCodeMap();
+        for(int i=0;(i<outputSize)&&i<p.getSize();i++){
+            Individual individual = leafCodeList.get(i);
+            String code = individual.getGene();
+            String faultName = "";
+            for(String name: codeMap.keySet()){
+                if(codeMap.get(name).equals(code)){
+                    faultName = name;
+                }
+            }
+            String info = "编码:"+ code +", 适应度:"+individual.getFitness()+", 故障ID:"+ faultName;
+            System.out.println(info);
+            result += (info +"\r\n");
+        }
+        result += String.format("总时间: %d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
     }
 
     @RequestMapping(path="/mongo/savef")

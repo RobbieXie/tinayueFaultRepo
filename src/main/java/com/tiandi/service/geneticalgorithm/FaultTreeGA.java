@@ -38,6 +38,9 @@ public class FaultTreeGA {
     private CloudFailureRepository failureRepository;
 
     public Map<String,String> generateFaultCode(){
+        if(this.leafCodeMap.size()>0){
+            return leafCodeMap;
+        }
         layerSize =0 ;
         totalCodeLength=0;
         layerLengthList = new ArrayList<>();

@@ -5,10 +5,7 @@ import com.tiandi.mongo.CloudFailureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author 谢天帝
@@ -19,7 +16,7 @@ public class FitnessCalc {
 
     private List<String> tags = new ArrayList<>();
 
-    private Map<Integer,List<String>> compareLayerAndCodeMap = new LinkedHashMap<>();
+    private Map<Integer,List<String>> compareLayerAndCodeMap = new HashMap<>();
 
     private List<Integer> layerLengthList = new ArrayList<>();
 
@@ -72,5 +69,23 @@ public class FitnessCalc {
         return fitness;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
 
+    public Map<Integer, List<String>> getCompareLayerAndCodeMap() {
+        return compareLayerAndCodeMap;
+    }
+
+    public void setCompareLayerAndCodeMap(Map<Integer, List<String>> compareLayerAndCodeMap) {
+        this.compareLayerAndCodeMap = compareLayerAndCodeMap;
+    }
+
+    public List<Integer> getLayerLengthList() {
+        return layerLengthList;
+    }
+
+    public void setLayerLengthList(List<Integer> layerLengthList) {
+        this.layerLengthList = layerLengthList;
+    }
 }
