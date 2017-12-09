@@ -23,4 +23,10 @@ public class Attacker {
         this.faultType = faultType;
         this.attackerPoint = attackerPoint;
     }
+
+    @Override
+    public String toString() {
+        return "{" +"faultType:"+this.faultType+",attackerPoint:"+this.attackerPoint+",host:"+this.host+
+                "}";
+    }
 }

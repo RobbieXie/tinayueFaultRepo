@@ -18,6 +18,7 @@ import com.tiandi.service.geneticalgorithm.FitnessCalc;
 import com.tiandi.service.geneticalgorithm.Individual;
 import com.tiandi.service.geneticalgorithm.Population;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -26,7 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.util.*;
 
 @RestController
@@ -57,6 +60,17 @@ public class testController {
     FitnessCalc fitnessCalc;
 
 
+    @RequestMapping(path="/mongo/ga/tags")
+    public String getTags(){
+        String result = "";
+        faultTreeGA.generateFaultCode();
+        List<String> tagsList = faultTreeGA.getTagsList();
+        for(String tag: tagsList){
+            result = result + tag +",";
+        }
+        if(result.length()>0) result=result.substring(0,result.length()-1);
+        return result;
+    }
     @RequestMapping(path="/mongo/ga")
     public String ga(@RequestParam List<String> tags, @RequestParam int outputSize, @RequestParam int generateTimes, @RequestParam int populationSize, @RequestParam Double crossoverRate,@RequestParam Double mutateRate,
                      @RequestParam Boolean elitsm,@RequestParam int tournamentSize){
@@ -116,8 +130,9 @@ public class testController {
     public String saveInjection() {
         faultInjectionInfoRepository.save(new FaultInjectionInfo("node-network-disconnect",new Attacker("node-network-disconnect",null),new Monitor("service-status",null,10,5)));
         faultInjectionInfoRepository.save(new FaultInjectionInfo("poweroff",new Attacker("node-poweroff",null),new Monitor("service-status",null,10,5)));
-        faultInjectionInfoRepository.save(new FaultInjectionInfo("service-crash",new Attacker("kill-main-process",null),new Monitor("service-status",null,10,5)));
-        faultInjectionInfoRepository.save(new FaultInjectionInfo("config-file-loss",new Attacker("remove-config-file",null),new Monitor("service-status",null,10,5)));
+        faultInjectionInfoRepository.save(new FaultInjectionInfo("process-crash",new Attacker("kill-main-process",null),new Monitor("service-status",null,10,5)));
+        faultInjectionInfoRepository.save(new FaultInjectionInfo("config-loss",new Attacker("remove-config-file",null),new Monitor("service-status",null,10,5)));
+        faultInjectionInfoRepository.save(new FaultInjectionInfo("config-wrong",new Attacker("edit-config-file",null),new Monitor("service-status",null,10,5)));
         return "saveInjection";
     }
 
@@ -183,6 +198,9 @@ public class testController {
                 failureRepository.save(parentCf);
                 failureRepository.save(cf);
                 faultTreeStructure = faultTreeService.ShowFaultTreeStructure();
+
+                FaultInjectionInfo injectionInfo = dsl.faultInjectionInfo;
+                if(injectionInfo!=null) faultInjectionInfoRepository.save(injectionInfo);
                 return "Add Fault Into Lib Successfully"+ "\n" + faultTreeStructure;
 
             }else if(operation.equals("GenerateTestCase")){
@@ -192,11 +210,54 @@ public class testController {
                 TestCase tc = faultInjectionInfoService.generateTestCase(params.faultId,params.attackerPoint,params.monitorPoint);
 //                else tc = faultInjectionInfoService.generateTestCase(params.faultId);
                 faultInjectionInfoService.createTestCaseFile(tc,params.outputPath+"//" +params.faultId+".yaml");
-                return "Generate TestCase Successfully!   " + params.outputPath+"//" +params.faultId+".yaml";
+                StringBuilder fileContent = new StringBuilder();
+                try{
+                    BufferedReader br = new BufferedReader(new FileReader(params.outputPath+"//" +params.faultId+".yaml"));//构造一个BufferedReader类来读取文件
+                    String s = null;
+                    while((s = br.readLine())!=null){//使用readLine方法，一次读一行
+                        fileContent.append(System.lineSeparator()+s);
+                    }
+                    br.close();
+                }catch(Exception e){
+                    e.printStackTrace();
+                    return "Generate TestCase File Error"+ e.toString();
+                }
+                return "Generate TestCase Successfully!   " + params.outputPath+"//" +params.faultId+".yaml"+ "\r\n" + fileContent.toString();
 
             }else if(operation.equals("ShowFaultTreeStructure")){
+
                 return faultTreeStructure;
 
+            }else if(operation.equals("DeleteFaultNode")){
+                CloudFailure cf = failureRepository.findById(dsl.cloudFailure.getId());
+                String id = cf.id;
+                List<String> index = cf.index;
+                if(!CollectionUtils.isEmpty(index)){
+                    CloudFailure parent = failureRepository.findById(index.get(index.size()-1));
+                    if(parent!=null) {
+                        parent.getChildren().remove(id);
+                        failureRepository.save(parent);
+                    }
+                }
+                List<CloudFailure> sons =  failureRepository.findByIndex(id);
+
+                failureRepository.delete(id);
+                for(CloudFailure son : sons){
+                    failureRepository.delete(son.id);
+                }
+                faultTreeStructure = faultTreeService.ShowFaultTreeStructure();
+                return faultTreeStructure;
+
+            }else if(operation.equals("DeleteFaultInjectionInfo")){
+                faultInjectionInfoRepository.delete(dsl.faultInjectionInfo.id);
+                return faultInjectionInfoRepository.findAll().toString();
+            }else if(operation.equals("ShowFaultInjectionInfo")){
+                List<FaultInjectionInfo> infos = faultInjectionInfoRepository.findAll();
+                String result = "";
+                for(FaultInjectionInfo info:infos){
+                    result = result+info.toString()+"\r\n\r\n";
+                }
+                return result;
             }else{
                 return "Error! Operation not Found!";
             }
@@ -520,19 +581,19 @@ public class testController {
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Process-Crash","Node1-Process-Crash-Nova"));
         tags.addAll(Arrays.asList("NovaApi"));
-        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaApi","Node1-Process-Crash-Nova-NovaApi","Node1-Process-Crash-Nova-NovaApi", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaApi","Node1-Process-Crash-Nova-NovaApi","Node1-Process-Crash-Nova-NovaApi", false,tags , "nova-api", "process-crash", index, null));
 
         //--2-- novaCompute
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Process-Crash","Node1-Process-Crash-Nova"));
         tags.addAll(Arrays.asList("NovaCompute"));
-        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaCompute","Node1-Process-Crash-Nova-NovaCompute","Node1-Process-Crash-Nova-NovaCompute", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaCompute","Node1-Process-Crash-Nova-NovaCompute","Node1-Process-Crash-Nova-NovaCompute", false,tags , "nova-compute", "process-crash", index, null));
 
         //--3-- novaScheduler
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Process-Crash","Node1-Process-Crash-Nova"));
         tags.addAll(Arrays.asList("NovaScheduler"));
-        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaScheduler","Node1-Process-Crash-Nova-NovaScheduler","Node1-Process-Crash-Nova-NovaScheduler", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Process-Crash-Nova-NovaScheduler","Node1-Process-Crash-Nova-NovaScheduler","Node1-Process-Crash-Nova-NovaScheduler", false,tags , "nova-scheduler", "process-crash", index, null));
     }
 
 
@@ -725,19 +786,19 @@ public class testController {
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Wrong","Node1-Config-Wrong-Nova"));
         tags.addAll(Arrays.asList("NovaApi"));
-        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaApi","Node1-Config-Wrong-Nova-NovaApi","Node1-Config-Wrong-Nova-NovaApi", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaApi","Node1-Config-Wrong-Nova-NovaApi","Node1-Config-Wrong-Nova-NovaApi", false,tags , "nova-api", "config-wrong", index, null));
 
         //--2-- novaCompute
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Wrong","Node1-Config-Wrong-Nova"));
         tags.addAll(Arrays.asList("NovaCompute"));
-        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaCompute","Node1-Config-Wrong-Nova-NovaCompute","Node1-Config-Wrong-Nova-NovaCompute", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaCompute","Node1-Config-Wrong-Nova-NovaCompute","Node1-Config-Wrong-Nova-NovaCompute", false,tags , "nova-compute", "config-wrong", index, null));
 
         //--3-- novaScheduler
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Wrong","Node1-Config-Wrong-Nova"));
         tags.addAll(Arrays.asList("NovaScheduler"));
-        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaScheduler","Node1-Config-Wrong-Nova-NovaScheduler","Node1-Config-Wrong-Nova-NovaScheduler", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Wrong-Nova-NovaScheduler","Node1-Config-Wrong-Nova-NovaScheduler","Node1-Config-Wrong-Nova-NovaScheduler", false,tags , "nova-scheduler", "config-wrong", index, null));
     }
 
 
@@ -930,19 +991,19 @@ public class testController {
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Loss","Node1-Config-Loss-Nova"));
         tags.addAll(Arrays.asList("NovaApi"));
-        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaApi","Node1-Config-Loss-Nova-NovaApi","Node1-Config-Loss-Nova-NovaApi", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaApi","Node1-Config-Loss-Nova-NovaApi","Node1-Config-Loss-Nova-NovaApi", false,tags , "nova-api", "config-loss", index, null));
 
         //--2-- novaCompute
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Loss","Node1-Config-Loss-Nova"));
         tags.addAll(Arrays.asList("NovaCompute"));
-        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaCompute","Node1-Config-Loss-Nova-NovaCompute","Node1-Config-Loss-Nova-NovaCompute", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaCompute","Node1-Config-Loss-Nova-NovaCompute","Node1-Config-Loss-Nova-NovaCompute", false,tags , "nova-compute", "config-loss", index, null));
 
         //--3-- novaScheduler
         index.clear();children.clear();tags.clear();
         index.addAll(Arrays.asList("Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Config-Loss","Node1-Config-Loss-Nova"));
         tags.addAll(Arrays.asList("NovaScheduler"));
-        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaScheduler","Node1-Config-Loss-Nova-NovaScheduler","Node1-Config-Loss-Nova-NovaScheduler", false,tags , null, null, index, null));
+        failureRepository.save(new CloudFailure("Node1-Config-Loss-Nova-NovaScheduler","Node1-Config-Loss-Nova-NovaScheduler","Node1-Config-Loss-Nova-NovaScheduler", false,tags , "nova-scheduler", "config-loss", index, null));
     }
 
 

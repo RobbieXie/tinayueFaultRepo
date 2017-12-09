@@ -1,0 +1,14 @@
+!!com.tiandi.mongo.testcase.TestCase
+schema: yardstick:task:0.1
+scenarios:
+- type: ServiceHA
+  options:
+    attackers:
+    - {faultType: kill-main-process, attackerPoint: /etc/nova/nova.conf, host: node1}
+    monitors:
+    - {monitorType: service-status, monitorTime: 10, monitorPoint: nova-api, SLA: 5,
+      host: node1}
+  runner: {type: Duration, duration: 1}
+  nodes: {node1: node1.LF}
+  sla: {outage_time: 5, action: monitor}
+context: {type: Node, name: LF, file: /root/yardstick/etc/yardstick/nodes/fuel_virtual/pod.yaml}

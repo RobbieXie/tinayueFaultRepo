@@ -30,4 +30,10 @@ public class Monitor {
         this.SLA = SLA;
         this.monitorPoint = monitorPoint;
     }
+
+    @Override
+    public String toString() {
+        return "{" +"monitorType:"+this.monitorType+",monitorPoint:"+this.monitorPoint+",host:"+this.host+",monitorTime:"+this.monitorTime+",SLA:"+this.SLA+
+                "}";
+    }
 }

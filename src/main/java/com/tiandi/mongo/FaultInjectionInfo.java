@@ -18,4 +18,9 @@ public class FaultInjectionInfo {
         this.attacker = attacker;
         this.monitor = monitor;
     }
+
+    @Override
+    public String toString() {
+        return "id:"+id+"\r\nAttacker:"+this.attacker.toString()+"\r\nMonitor:"+this.monitor.toString();
+    }
 }

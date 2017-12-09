@@ -17,4 +17,7 @@ public interface CloudFailureRepository extends MongoRepository<CloudFailure,Str
 
     @Query("{'index':{ '$size':?0}}")
     public List<CloudFailure> findByIndexSize(int size);
+
+//    @Query()
+//    public int deleteAllById(String id)
 }

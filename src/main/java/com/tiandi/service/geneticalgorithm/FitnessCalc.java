@@ -31,6 +31,7 @@ public class FitnessCalc {
     }
 
     public void setTags(List<String> tags) {
+        compareLayerAndCodeMap = new HashMap<>();
         this.tags = tags;
         layerLengthList = faultTreeGA.getLayerLengthList();
 

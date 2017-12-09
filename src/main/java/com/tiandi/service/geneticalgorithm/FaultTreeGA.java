@@ -21,7 +21,7 @@ public class FaultTreeGA {
     Integer layerSize = 0;
 
     //编码总长度
-    Integer totalCodeLength = 0;
+    Integer  totalCodeLength = 0;
 
     //存储每层编码长度为几位
     List<Integer> layerLengthList = new ArrayList<>();
@@ -33,6 +33,8 @@ public class FaultTreeGA {
     int maxLeafNodes = 0;
 
     Map<String,String> leafCodeMap = new LinkedHashMap<>();
+
+    List<String> tagsList = new ArrayList<>();
 
     @Autowired
     private CloudFailureRepository failureRepository;
@@ -48,6 +50,7 @@ public class FaultTreeGA {
         specialList = new ArrayList<>();
         maxLeafNodes = 0 ;
         leafCodeMap = new LinkedHashMap<>();
+        tagsList = new ArrayList<>();
 
         List<CloudFailure> cfs = failureRepository.findByIndexSize(1);
         // 逐层遍历数据库
@@ -57,8 +60,19 @@ public class FaultTreeGA {
             Map<String,Integer> nameToCodeMap = new LinkedHashMap<>();
             // 分开叶子结点和目录节点到两个数组
             for(CloudFailure cf : cfs){
-                if(cf.isCategory) categoryCfList.add(cf);
-                else leafCfList.add(cf);
+                if(cf.isCategory) {
+                    categoryCfList.add(cf);
+
+                    //记录tags
+                    List<String> tags = cf.getTags();
+                    for(String tag : tags){
+                        if(!tagsList.contains(tag))
+                            tagsList.add(tag);
+                    }
+                }
+                else {
+                    leafCfList.add(cf);
+                }
             }
 
             //通过map去除相同name的个数
@@ -211,5 +225,15 @@ public class FaultTreeGA {
 
     public void setFailureRepository(CloudFailureRepository failureRepository) {
         this.failureRepository = failureRepository;
+    }
+
+    public void logLeafMap(){
+        for(String name : leafCodeMap.keySet()){
+            System.out.println(name + " : "+leafCodeMap.get(name));
+        }
+    }
+
+    public List<String> getTagsList() {
+        return tagsList;
     }
 }

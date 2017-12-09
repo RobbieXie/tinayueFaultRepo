@@ -4,6 +4,7 @@ import com.tiandi.mongo.CloudFailure;
 import com.tiandi.mongo.CloudFailureRepository;
 import com.tiandi.mongo.faulttree.FaultTreeNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,8 +22,9 @@ public class FaultTreeService {
 
     public String ShowFaultTreeStructure(){
         List<CloudFailure> cfs = failureRepository.findByIndex(null);
+        if(org.springframework.util.CollectionUtils.isEmpty(cfs))
+            return "Empty tree.";
         CloudFailure cf = cfs.get(0);
-        if(cf==null) return "Empty!";
         FaultTreeNode rootNode = recursiveTree(cf.id,true);
         String result = printTree(rootNode);
         return result;
