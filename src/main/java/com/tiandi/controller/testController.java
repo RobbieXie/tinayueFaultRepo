@@ -17,6 +17,8 @@ import com.tiandi.service.geneticalgorithm.FaultTreeGA;
 import com.tiandi.service.geneticalgorithm.FitnessCalc;
 import com.tiandi.service.geneticalgorithm.Individual;
 import com.tiandi.service.geneticalgorithm.Population;
+import com.tiandi.service.hillclimbing.HillingClimbing;
+import com.tiandi.service.simulatedannealing.SimulatedAnnealing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +61,166 @@ public class testController {
     @Autowired
     FitnessCalc fitnessCalc;
 
+    @Autowired
+    private HillingClimbing hillingClimbing;
+
+    @Autowired
+    private SimulatedAnnealing simulatedAnnealing;
+
+    @RequestMapping(path="/mongo/hc/totalFit")
+    public String totoalHcFit(@RequestParam int times){
+        String result = "";
+        long startTime = System.currentTimeMillis();
+        int total = 0;
+        for(int i=0;i<times;i++){
+            int fit = this.hillClimbingReturnInt();
+            total += fit;
+//            result = result + fit + "\r\n";
+        }
+        result = result + "\r\n" + total + "\r\n";
+        result += String.format("%d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
+    }
+
+    @RequestMapping(path="/mongo/sa/totalFit")
+    public String totoalSaFit(@RequestParam int times){
+        String result = "";
+        long startTime = System.currentTimeMillis();
+        int total = 0;
+        for(int i=0;i<times;i++){
+            int fit = this.simulatedAnnealingReturnInt();
+            total += fit;
+//            result = result + fit + "\r\n";
+        }
+        result = result + "\r\n" + total + "\r\n";
+        result += String.format("%d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
+    }
+
+    public int hillClimbingReturnInt(){
+        int totalFitness = 0;
+        List<CloudFailure> resultList = new ArrayList<>();
+        int size =20;
+
+        List<String> tags = Arrays.asList("Network","ConfigWrong");
+        if(hillingClimbing.getTags()==null || hillingClimbing.getTags().size()<=0){
+            hillingClimbing.setTags(tags);
+        }
+        resultList = hillingClimbing.getMaxFitnessList(size);
+
+        Collections.sort(resultList, new Comparator<CloudFailure>() {
+            @Override
+            public int compare(CloudFailure cf1, CloudFailure cf2) {
+                return hillingClimbing.getCloudFailureFitnessMap().get(cf2) - hillingClimbing.getCloudFailureFitnessMap().get(cf1);
+            }
+        });
+
+        for(int i=0;i<size;i++){
+            int fitness = hillingClimbing.getCloudFailureFitnessMap().get(resultList.get(i));
+            String info = "适应度:"+ fitness +", 故障ID:"+ resultList.get(i).getId();
+            System.out.println(info);
+            totalFitness += fitness;
+        }
+
+        return totalFitness;
+    }
+
+    public int simulatedAnnealingReturnInt(){
+        int totalFitness = 0;
+        List<CloudFailure> resultList = new ArrayList<>();
+        int size =20;
+
+        List<String> tags = Arrays.asList("Network","ConfigWrong");
+        if(simulatedAnnealing.getTags()==null || simulatedAnnealing.getTags().size()<=0){
+            simulatedAnnealing.setTags(tags);
+        }
+
+        resultList = simulatedAnnealing.getMaxFitessList(size);
+
+        Collections.sort(resultList, new Comparator<CloudFailure>() {
+            @Override
+            public int compare(CloudFailure cf1, CloudFailure cf2) {
+                return simulatedAnnealing.getCloudFailureFitnessMap().get(cf2) - simulatedAnnealing.getCloudFailureFitnessMap().get(cf1);
+            }
+        });
+
+        for(int i=0;i<size;i++){
+            int fitness = simulatedAnnealing.getCloudFailureFitnessMap().get(resultList.get(i));
+            String info = "适应度:"+ fitness +", 故障ID:"+ resultList.get(i).getId();
+            System.out.println(info);
+            totalFitness += fitness;
+        }
+        return totalFitness;
+    }
+
+    @RequestMapping(path="/mongo/hc")
+    public String hillClimbing(){
+        String result = "";
+        int totalFitness = 0;
+        long startTime = System.currentTimeMillis();
+        List<CloudFailure> resultList = new ArrayList<>();
+        int size =20;
+
+        List<String> tags = Arrays.asList("Network","ConfigWrong");
+        if(hillingClimbing.getTags()==null || hillingClimbing.getTags().size()<=0){
+            hillingClimbing.setTags(tags);
+        }
+        resultList = hillingClimbing.getMaxFitnessList(size);
+
+        Collections.sort(resultList, new Comparator<CloudFailure>() {
+            @Override
+            public int compare(CloudFailure cf1, CloudFailure cf2) {
+                return hillingClimbing.getCloudFailureFitnessMap().get(cf2) - hillingClimbing.getCloudFailureFitnessMap().get(cf1);
+            }
+        });
+
+        for(int i=0;i<size;i++){
+            int fitness = hillingClimbing.getCloudFailureFitnessMap().get(resultList.get(i));
+            String info = "适应度:"+ fitness +", 故障ID:"+ resultList.get(i).getId();
+            System.out.println(info);
+            result += (info +"\r\n");
+            totalFitness += fitness;
+        }
+
+        result += String.format("总适应度: %d", totalFitness);
+        result += String.format("总时间: %d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
+    }
+
+    @RequestMapping(path="/mongo/sa")
+    public String simulatedAnnealing(){
+        String result = "";
+        int totalFitness = 0;
+        long startTime = System.currentTimeMillis();
+        List<CloudFailure> resultList = new ArrayList<>();
+        int size =20;
+
+        List<String> tags = Arrays.asList("Network","ConfigWrong");
+        if(simulatedAnnealing.getTags()==null || simulatedAnnealing.getTags().size()<=0){
+            simulatedAnnealing.setTags(tags);
+        }
+
+        resultList = simulatedAnnealing.getMaxFitessList(size);
+
+        Collections.sort(resultList, new Comparator<CloudFailure>() {
+            @Override
+            public int compare(CloudFailure cf1, CloudFailure cf2) {
+                return simulatedAnnealing.getCloudFailureFitnessMap().get(cf2) - simulatedAnnealing.getCloudFailureFitnessMap().get(cf1);
+            }
+        });
+
+        for(int i=0;i<size;i++){
+            int fitness = simulatedAnnealing.getCloudFailureFitnessMap().get(resultList.get(i));
+            String info = "适应度:"+ fitness +", 故障ID:"+ resultList.get(i).getId();
+            System.out.println(info);
+            result += (info +"\r\n");
+            totalFitness += fitness;
+        }
+
+        result += String.format("总适应度: %d", totalFitness);
+        result += String.format("总时间: %d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
+    }
 
     @RequestMapping(path="/mongo/ga/tags")
     public String getTags(){
@@ -71,10 +233,12 @@ public class testController {
         if(result.length()>0) result=result.substring(0,result.length()-1);
         return result;
     }
+
     @RequestMapping(path="/mongo/ga")
     public String ga(@RequestParam List<String> tags, @RequestParam int outputSize, @RequestParam int generateTimes, @RequestParam int populationSize, @RequestParam Double crossoverRate,@RequestParam Double mutateRate,
                      @RequestParam Boolean elitsm,@RequestParam int tournamentSize){
         String result = "";
+        int totalFitness = 0;
         long startTime = System.currentTimeMillis();
         faultTreeGA.generateFaultCode();
         fitnessCalc.setTags(tags);
@@ -87,8 +251,12 @@ public class testController {
         p.setTournamentSize(tournamentSize);
 
         p.generatePopulation();
+//        System.out.println("第0代种群：");
+//        p.log();
         for(int i=0;i<generateTimes;i++){
+//            System.out.println("第"+(i+1)+"代种群：");
             p = p.generateNextPopulation();
+//            p.log();
         }
 
         // 将population从大到小排序
@@ -115,8 +283,81 @@ public class testController {
             String info = "编码:"+ code +", 适应度:"+individual.getFitness()+", 故障ID:"+ faultName;
             System.out.println(info);
             result += (info +"\r\n");
+            totalFitness += individual.getFitness();
         }
+        result += String.format("总适应度: %d", totalFitness);
         result += String.format("总时间: %d %s",System.currentTimeMillis()-startTime,"ms");
+        return result;
+    }
+
+    @RequestMapping(path="/mongo/ga/fitness")
+    public int gaFitness(@RequestParam List<String> tags, @RequestParam int outputSize, @RequestParam int generateTimes, @RequestParam int populationSize, @RequestParam Double crossoverRate,@RequestParam Double mutateRate,
+                     @RequestParam Boolean elitsm,@RequestParam int tournamentSize){
+        String result = "";
+        int totalFitness = 0;
+        long startTime = System.currentTimeMillis();
+        faultTreeGA.generateFaultCode();
+        fitnessCalc.setTags(tags);
+
+        Population p = new Population();
+        p.setSize(populationSize);
+        p.setCrossoverRate(crossoverRate);
+        p.setMutateRate(mutateRate);
+        p.setElitsm(elitsm);
+        p.setTournamentSize(tournamentSize);
+
+        p.generatePopulation();
+//        System.out.println("第0代种群：");
+//        p.log();
+        for(int i=0;i<generateTimes;i++){
+//            System.out.println("第"+(i+1)+"代种群：");
+            p = p.generateNextPopulation();
+//            p.log();
+        }
+
+        // 将population从大到小排序
+        List<Individual> leafCodeList = p.getIndividuals();
+        Collections.sort(leafCodeList, new Comparator<Individual>() {
+            @Override
+            public int compare(Individual o1, Individual o2) {
+                return o2.getFitness()-o1.getFitness();
+            }
+        });
+
+        // 输出
+        if(outputSize<=0) outputSize=20;
+        Map<String,String> codeMap = faultTreeGA.getLeafCodeMap();
+        for(int i=0;(i<outputSize)&&i<p.getSize();i++){
+            Individual individual = leafCodeList.get(i);
+            String code = individual.getGene();
+            String faultName = "";
+            for(String name: codeMap.keySet()){
+                if(codeMap.get(name).equals(code)){
+                    faultName = name;
+                }
+            }
+            String info = "编码:"+ code +", 适应度:"+individual.getFitness()+", 故障ID:"+ faultName;
+//            System.out.println(info);
+            result += (info +"\r\n");
+            totalFitness += individual.getFitness();
+        }
+        return totalFitness;
+    }
+
+    @RequestMapping(path="/mongo/ga/totalFit")
+    public String totoalFit(@RequestParam int times, @RequestParam List<String> tags, @RequestParam int outputSize, @RequestParam int generateTimes,
+                            @RequestParam int populationSize, @RequestParam Double crossoverRate,@RequestParam Double mutateRate,
+                            @RequestParam Boolean elitsm,@RequestParam int tournamentSize){
+        String result = "";
+        long startTime = System.currentTimeMillis();
+        int total = 0;
+        for(int i=0;i<times;i++){
+            int fit = this.gaFitness(tags,outputSize,generateTimes,populationSize,crossoverRate,mutateRate,elitsm,tournamentSize);
+            total += fit;
+//            result = result + fit + "\r\n";
+        }
+        result = result + "\r\n" + total + "\r\n";
+        result += String.format("%d %s",System.currentTimeMillis()-startTime,"ms");
         return result;
     }
 

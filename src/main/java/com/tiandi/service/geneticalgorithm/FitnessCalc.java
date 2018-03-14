@@ -4,6 +4,7 @@ import com.tiandi.mongo.CloudFailure;
 import com.tiandi.mongo.CloudFailureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -40,7 +41,8 @@ public class FitnessCalc {
             List<CloudFailure> cfs = failureRepository.findByIndexSize(1);
             // 逐层遍历数据库
             for(int j = 1; cfs!=null&&cfs.size()!=0;j++){
-                List<String> compareCodes = new ArrayList<>();
+                List<String> compareCodes = compareLayerAndCodeMap.get(j);
+                if(CollectionUtils.isEmpty(compareCodes)) compareCodes = new ArrayList<>();
                 for(CloudFailure cf : cfs){
                     if(cf.isCategory && cf.getTags().indexOf(tag)!=-1){
                         if(!compareCodes.contains(faultTreeGA.getCategoryLayerCodeMap().get(j).get(cf.getName())))

@@ -114,4 +114,8 @@ public class CloudFailure {
                 id);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return ((CloudFailure) obj).getId().equals(this.getId());
+    }
 }

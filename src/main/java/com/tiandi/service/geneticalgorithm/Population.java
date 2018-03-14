@@ -50,13 +50,13 @@ public class Population {
     }
 
     public void generatePopulation(){
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         for(int i=0;i<size;i++){
             Individual individual = new Individual();
             individual.generateIndividul();
             individuals.add(individual);
         }
-        System.out.println("创建population耗时："+ (System.currentTimeMillis() - start)/1000 +" s");
+//        System.out.println("创建population耗时："+ (System.currentTimeMillis() - start)/1000 +" s");
     }
 
     public List<Individual> getIndividuals() {
@@ -68,7 +68,7 @@ public class Population {
     }
 
     public Population generateNextPopulation(){
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         Population population = new Population();
         List<Individual> nextPopulationIndividuals = new ArrayList<>();
         List<String> nextPopulationCodes = new ArrayList<>();
@@ -85,7 +85,7 @@ public class Population {
         population.setSize(this.size);
         population.setIndividuals(nextPopulationIndividuals);
 
-        System.out.println("创建下一代population耗时："+ (System.currentTimeMillis() - start) +" ms");
+//        System.out.println("创建下一代population耗时："+ (System.currentTimeMillis() - start) +" ms");
         //如果保留精英
         if(elitsm){
             Individual old_fittest = this.getFittest();
@@ -197,10 +197,13 @@ public class Population {
     }
 
     public void log(){
+        int sum = 0;
         for(int i=0;i<size;i++){
             Individual individual = individuals.get(i);
+            sum += individual.getFitness();
             System.out.println("当前编号:"+individual.getGene()+"  适应度： "+ individual.getFitness() );
         }
+        System.out.println(String.format("总适应度：%d, 平均适应度：%.3f ",sum,((float)sum/size)));
     }
 
     public String binary2decimal(int decNum , int digit) {
