@@ -1,0 +1,8 @@
+FaultRepoFunction::= Operation, [TestCaseParams], [FaultInfo];
+Operation::== "AddFaultIntoRepo" | "GenerateTestCase";
+TestCaseParams::= TestCaseFilePath, [AttakerPoint], [MonitorPoint];
+FaultInfo::= GeneralInfo, [FaultInjectionInfo];
+GeneralInfo::= ID, Name, [Index], Description, IsCategory, [FaultLocation], [Cause] 
+FaultInjectionInfo::= ID, Attacker, Monitor
+
+

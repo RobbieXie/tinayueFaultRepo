@@ -1,0 +1,4 @@
+operation: DeleteFaultInjectionInfo
+
+faultInjectionInfo:
+  id: poweroff

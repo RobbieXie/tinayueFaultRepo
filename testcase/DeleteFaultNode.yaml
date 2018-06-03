@@ -1,0 +1,7 @@
+operation: DeleteFaultNode
+
+cloudFailure:
+  id: Node1-Process-Crash-Nova-NovaApi
+
+#Cloud-Failure
+#Node1-Process-Crash-Nova-NovaApi

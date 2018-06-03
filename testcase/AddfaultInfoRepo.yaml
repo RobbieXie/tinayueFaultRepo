@@ -1,0 +1,30 @@
+operation: AddFaultIntoLib
+
+cloudFailure:
+  id: Node1-Process-Crash-Nova-NovaApi
+  name: Node1-Process-Crash-Nova-NovaApi
+  description: Node1-Process-Crash-Nova-NovaApi.
+  isCategory: false
+  cause: process-crash
+  faultLocation: nova-api
+  index: ["Cloud-Failure","Node1-Failure","Node1-Software-Failure","Node1-Process-Crash","Node1-Process-Crash-Nova"]
+
+faultInjectionInfo:
+  id: process-crash
+  attacker:
+    faultType: kill-main-process
+  monitor:
+    monitorType: service-status
+    monitorTime: 10
+    SLA: 5
+
+
+# AddFaultIntoLib
+# ShowFaultTreeStructure
+# GenerateTestCase
+
+# for GenerateTestCase
+# testCaseParams:
+#   faultId: Node1-Process-Crash-Nova-NovaApi
+#   outputPath: "F:/testcase/"
+#   attackerPoint: "/etc/nova/nova.conf"
