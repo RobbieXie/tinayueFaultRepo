@@ -28,3 +28,5 @@ faultInjectionInfo:
 #   faultId: Node1-Process-Crash-Nova-NovaApi
 #   outputPath: "F:/testcase/"
 #   attackerPoint: "/etc/nova/nova.conf"
+
+#test
